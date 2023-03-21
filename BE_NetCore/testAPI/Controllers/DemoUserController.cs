@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
 using testAPI.Extention;
 using testAPI.User;
 
@@ -14,6 +17,19 @@ namespace testAPI.Controllers
         public DemoUserController(IUserHandler handler)
         {
             _handler = handler;
+        }
+        
+        [HttpGet("GenerateQRCode")]
+        public ActionResult GenerateQRCode(string qrtext)
+        {
+            QRCodeGenerator _qRCode = new QRCodeGenerator();
+            QRCodeData _qRCodeData = _qRCode.CreateQrCode(qrtext, QRCodeGenerator.ECCLevel.Q);
+            QRCode qRCode = new QRCode(_qRCodeData);
+            Image image = qRCode.GetGraphic(20);
+            MemoryStream stream = new MemoryStream();
+            image.Save(stream, ImageFormat.Png);
+            var bytes = stream.ToArray();
+            return File(bytes, "image/bmp");
         }
         [HttpGet]
         public ResponseData GetUser()
