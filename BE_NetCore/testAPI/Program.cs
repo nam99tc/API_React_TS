@@ -1,6 +1,7 @@
 using Microsoft.OpenApi.Models;
 using testAPI.Business.EmailTemplate;
 using testAPI.Business.Navigation;
+using testAPI.Business.School;
 using testAPI.Business.SMSTemplate;
 using testAPI.Context;
 using testAPI.Extention.Middleware;
@@ -67,6 +68,7 @@ internal class Program
             .AddScoped<IUserHandler, UserHandler>()
             .AddScoped<IEmailTemplatehandler, EmailTemplatehandler>()
             .AddScoped<ISMSTemplateHandler, SMSTemplateHandler>()
+            .AddScoped<ISchoolHandler, SchoolHandler>()
             .AddScoped<INavigationHandler, NavigationHandler>();
         builder.Services.AddDbContext<DemoContext>();
 

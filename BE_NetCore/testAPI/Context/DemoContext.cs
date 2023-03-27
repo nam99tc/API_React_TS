@@ -13,6 +13,7 @@ namespace testAPI.Context
         public DbSet<SysSMSTemplate> SysSMSTemplates { get; set; }
         public DbSet<SysEmailTemplate> SysEmailTemplates { get; set; }
         public DbSet<SysNavigation> SysNavigations { get; set; }
+        public DbSet<SysSchool> SysSchools { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

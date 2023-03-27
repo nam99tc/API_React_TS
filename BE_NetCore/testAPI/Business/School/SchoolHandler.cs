@@ -3,30 +3,30 @@ using testAPI.Datatables;
 using testAPI.Extention;
 using testAPI.Repositories;
 
-namespace testAPI.Business.EmailTemplate
+namespace testAPI.Business.School
 {
-    public class EmailTemplatehandler : IEmailTemplatehandler
+    public class SchoolHandler : ISchoolHandler
     {
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public EmailTemplatehandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public SchoolHandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
-        public ResponseData Create(EmailTemplateModel model)
+        public ResponseData Create(SchoolModel model)
         {
             try
             {
                 using UnitOfWork unitOfWork = new UnitOfWork(_httpContextAccessor);
-                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(x => x.EmailTemplateName == model.EmailTemplateName);
-                if (emailTemplate != null)
+                var school = unitOfWork.Repository<SysSchool>().FirstOrDefault(x => x.SchoolName == model.SchoolName || x.Code == model.Code);
+                if (school != null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Entity_Already);
                 }
-                var newEmailTemplate = _mapper.Map<SysEmailTemplate>(model);
-                newEmailTemplate.Id = Guid.NewGuid();
-                unitOfWork.Repository<SysEmailTemplate>().Insert(newEmailTemplate);
+                var newSchool = _mapper.Map<SysSchool>(model);
+                newSchool.Id = Guid.NewGuid();
+                unitOfWork.Repository<SysSchool>().Insert(newSchool);
                 unitOfWork.Save();
 
                 return new ResponseData(Code.Success, Constant.Success);
@@ -42,12 +42,12 @@ namespace testAPI.Business.EmailTemplate
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(x => x.Id == id);
-                if (emailTemplate == null)
+                var school = unitOfWork.Repository<SysSchool>().FirstOrDefault(x => x.Id == id);
+                if (school == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                unitOfWork.Repository<SysEmailTemplate>().Delete(emailTemplate);
+                unitOfWork.Repository<SysSchool>().Delete(school);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }
@@ -62,10 +62,10 @@ namespace testAPI.Business.EmailTemplate
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var emailTemplates = unitOfWork.Repository<SysEmailTemplate>().Get(x => ids.Contains(x.Id.ToString()));
-                foreach (var item in emailTemplates)
+                var schools = unitOfWork.Repository<SysSchool>().Get(x => ids.Contains(x.Id.ToString()));
+                foreach (var item in schools)
                 {
-                    unitOfWork.Repository<SysEmailTemplate>().Delete(item);
+                    unitOfWork.Repository<SysSchool>().Delete(item);
                 }
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
@@ -81,14 +81,14 @@ namespace testAPI.Business.EmailTemplate
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().Get();
-                var result = new List<EmailTemplateModel>();
-                foreach (var item in emailTemplate)
+                var schools = unitOfWork.Repository<SysSchool>().Get();
+                var result = new List<SchoolModel>();
+                foreach (var item in schools)
                 {
-                    var tempEmail = _mapper.Map<EmailTemplateModel>(item);
-                    result.Add(tempEmail);
+                    var school = _mapper.Map<SchoolModel>(item);
+                    result.Add(school);
                 }
-                return new ResponseDataObject<List<EmailTemplateModel>>(result, Code.Success, Constant.Success);
+                return new ResponseDataObject<List<SchoolModel>>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -101,13 +101,13 @@ namespace testAPI.Business.EmailTemplate
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var existData = unitOfWork.Repository<SysEmailTemplate>().GetById(id);
+                var existData = unitOfWork.Repository<SysSchool>().GetById(id);
                 if (existData == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                var result = _mapper.Map<EmailTemplateModel>(existData);
-                return new ResponseDataObject<EmailTemplateModel>(result, Code.Success, Constant.Success);
+                var result = _mapper.Map<SchoolModel>(existData);
+                return new ResponseDataObject<SchoolModel>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -115,7 +115,7 @@ namespace testAPI.Business.EmailTemplate
             }
         }
 
-        public ResponseData Update(Guid id, EmailTemplateModel model)
+        public ResponseData Update(Guid id, SchoolModel model)
         {
             try
             {
@@ -124,20 +124,20 @@ namespace testAPI.Business.EmailTemplate
                     return new ResponseDataError(Code.BadRequest, Constant.IdNotMatch);
                 }
                 using var unitOfWork = new UnitOfWork(_httpContextAccessor);
-                var entity = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(p => p.Id == id);
+                var entity = unitOfWork.Repository<SysSchool>().FirstOrDefault(p => p.Id == id);
                 if (entity == null)
                 {
                     return new ResponseDataError(Code.NotFound, Constant.Not_Found);
                 }
-                if (unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(p => p.EmailTemplateName == model.EmailTemplateName) != null)
+                if (unitOfWork.Repository<SysSchool>().FirstOrDefault(p => p.SchoolName == model.SchoolName || p.Code == model.Code) != null)
                 {
-                    return new ResponseDataError(Code.NotFound, "Email Template Name already");
+                    return new ResponseDataError(Code.NotFound, "School already");
                 }
 
                 _mapper.Map(model, entity);
 
                 entity.LastModifiedOnDate = DateTime.Now;
-                unitOfWork.Repository<SysEmailTemplate>().Update(entity);
+                unitOfWork.Repository<SysSchool>().Update(entity);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }
