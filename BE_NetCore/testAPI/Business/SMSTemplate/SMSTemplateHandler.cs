@@ -2,43 +2,39 @@
 using testAPI.Datatables;
 using testAPI.Extention;
 using testAPI.Repositories;
+using testAPI.User;
 
-namespace testAPI.User
+namespace testAPI.Business.SMSTemplate
 {
-    public class UserHandler : IUserHandler
+    public class SMSTemplateHandler : ISMSTemplateHandler
     {
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public UserHandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public SMSTemplateHandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
-
-        public ResponseData Create(UserModel model)
+        public ResponseData Create(SMSTemplateModel model)
         {
             try
             {
-                using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var user = unitOfWork.Repository<SysDemoUser>().FirstOrDefault(x => x.Username == model.Username);
-                if (user != null)
+                using UnitOfWork unitOfWork = new UnitOfWork(_httpContextAccessor);
+                var smsTemplate = unitOfWork.Repository<SysSMSTemplate>().FirstOrDefault(x => x.SmsTemplateName == model.SmsTemplateName);
+                if (smsTemplate != null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Entity_Already);
                 }
-                model.DateOfBirth = Convert.ToDateTime(model.DateOfBirth.ToShortDateString());
-
-                var userNew = _mapper.Map<SysDemoUser>(model);
-                userNew.Id = Guid.NewGuid();
-                userNew.CreatedByUserId = userNew.Id;
-                unitOfWork.Repository<SysDemoUser>().Insert(userNew);
+                var newSMSTemplate = _mapper.Map<SysSMSTemplate>(model);
+                newSMSTemplate.Id = Guid.NewGuid();
+                unitOfWork.Repository<SysSMSTemplate>().Insert(newSMSTemplate);
                 unitOfWork.Save();
 
                 return new ResponseData(Code.Success, Constant.Success);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                return new ResponseDataError(Code.ServerError, exception.Message);
+                return new ResponseDataError(Code.BadRequest, ex.Message);
             }
         }
 
@@ -47,12 +43,12 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var user = unitOfWork.Repository<SysDemoUser>().FirstOrDefault(x => x.Id == id);
-                if(user == null)
+                var smsTemplate = unitOfWork.Repository<SysSMSTemplate>().FirstOrDefault(x => x.Id == id);
+                if (smsTemplate == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                unitOfWork.Repository<SysDemoUser>().Delete(user);
+                unitOfWork.Repository<SysSMSTemplate>().Delete(smsTemplate);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }
@@ -67,10 +63,10 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var users = unitOfWork.Repository<SysDemoUser>().Get(x => ids.Contains(x.Id.ToString()));
-                foreach (var item in users)
+                var smsTemplates = unitOfWork.Repository<SysSMSTemplate>().Get(x => ids.Contains(x.Id.ToString()));
+                foreach (var item in smsTemplates)
                 {
-                    unitOfWork.Repository<SysDemoUser>().Delete(item);
+                    unitOfWork.Repository<SysSMSTemplate>().Delete(item);
                 }
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
@@ -86,14 +82,14 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var userData = unitOfWork.Repository<SysDemoUser>().Get();
-                var result = new List<UserModel>();
-                foreach (var item in userData)
+                var smsTemplate = unitOfWork.Repository<SysSMSTemplate>().Get();
+                var result = new List<SMSTemplateModel>();
+                foreach (var item in smsTemplate)
                 {
-                    var tempUser = _mapper.Map<UserModel>(item);
-                    result.Add(tempUser);
+                    var tempSms = _mapper.Map<SMSTemplateModel>(item);
+                    result.Add(tempSms);
                 }
-                return new ResponseDataObject<List<UserModel>>(result, Code.Success, Constant.Success);
+                return new ResponseDataObject<List<SMSTemplateModel>>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -106,13 +102,13 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var existData = unitOfWork.Repository<SysDemoUser>().GetById(id);
+                var existData = unitOfWork.Repository<SysSMSTemplate>().GetById(id);
                 if (existData == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                var result = _mapper.Map<UserModel>(existData);
-                return new ResponseDataObject<UserModel>(result, Code.Success, Constant.Success);
+                var result = _mapper.Map<SMSTemplateModel>(existData);
+                return new ResponseDataObject<SMSTemplateModel>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -120,28 +116,25 @@ namespace testAPI.User
             }
         }
 
-        public ResponseData Update(Guid id, UserModel model)
+        public ResponseData Update(Guid id, SMSTemplateModel model)
         {
             try
             {
-                using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var existUser = unitOfWork.Repository<SysDemoUser>().GetById(id);
-                if (existUser == null)
+                if (id != model.Id)
                 {
-                    return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
+                    return new ResponseDataError(Code.BadRequest, Constant.IdNotMatch);
                 }
-                //existUser.LastModifiedOnDate = DateTime.Now;
-                //existUser.Username = model.Username.Trim();
-                //existUser.Fullname = model.Fullname.Trim();
-                //existUser.Phone = model.Phone.Trim();
-                //existUser.Address = model.Address.Trim();
-                //existUser.DateOfBirth = model.DateOfBirth;
-                //existUser.Email = model.Email.Trim();
-                //existUser.LastModifiedByUserId = model.Id;
+                using var unitOfWork = new UnitOfWork(_httpContextAccessor);
+                var entity = unitOfWork.Repository<SysSMSTemplate>().FirstOrDefault(p => p.Id == id);
+                if (entity == null)
+                {
+                    return new ResponseDataError(Code.NotFound, Constant.Not_Found);
+                }
 
-                _mapper.Map(model, existUser);
-                unitOfWork.Repository<SysDemoUser>().Update(existUser);
+                _mapper.Map(model, entity);
 
+                entity.LastModifiedOnDate = DateTime.Now;
+                unitOfWork.Repository<SysSMSTemplate>().Update(entity);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }

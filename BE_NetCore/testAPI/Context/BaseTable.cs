@@ -1,6 +1,6 @@
 ﻿namespace testAPI.Context
 {
-    public class BaseTable<T> where T : BaseTable<T>
+    public class BaseTable
     {
         public Guid CreatedByUserId { get; set; }
         public Guid LastModifiedByUserId { get; set; }

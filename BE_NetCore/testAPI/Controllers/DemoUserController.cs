@@ -56,7 +56,7 @@ namespace testAPI.Controllers
         }
 
         [HttpDelete]
-        [Route("{id}")]
+        [Route("Delete/{id}")]
         public ResponseData Delete(Guid id)
         {
             return _handler.Delete(id);

@@ -3,7 +3,7 @@ using testAPI.Context;
 
 namespace testAPI.Datatables
 {
-    public class SysDemoUser : BaseTable<SysDemoUser>
+    public class SysDemoUser : BaseTable
     {
         [Key]
         public Guid Id { get; set; }

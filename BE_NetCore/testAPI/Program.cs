@@ -1,4 +1,10 @@
+using Microsoft.OpenApi.Models;
+using testAPI.Business.EmailTemplate;
+using testAPI.Business.Navigation;
+using testAPI.Business.SMSTemplate;
 using testAPI.Context;
+using testAPI.Extention.Middleware;
+using testAPI.Extention.Utils;
 using testAPI.User;
 
 internal class Program
@@ -13,6 +19,38 @@ internal class Program
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
+        //    builder.Services.AddSwaggerGen(c =>
+        //    {
+        //        c.SwaggerDoc("v2", new OpenApiInfo { Title = "CatalogueAPI", Version = "v2" });
+        //    });
+        //    builder.Services.AddSwaggerGen(c =>
+        //    {
+        //        c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
+        //        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        //        {
+        //            In = ParameterLocation.Header,
+        //            Description = "Please enter a valid token",
+        //            Name = "Authorization",
+        //            Type = SecuritySchemeType.Http,
+        //            BearerFormat = "JWT",
+        //            Scheme = "Bearer"
+        //        });
+        //        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        //{
+        //    {
+        //        new OpenApiSecurityScheme
+        //        {
+        //            Reference = new OpenApiReference
+        //            {
+        //                Type=ReferenceType.SecurityScheme,
+        //                Id="Bearer"
+        //            }
+        //        },
+        //        Array.Empty<string>()
+        //    }
+        //});
+        //        c.OperationFilter<AddRequiredHeaderParameter>();
+        //    });
         builder.Services.AddSwaggerGen();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAutoMapper(typeof(Program));
@@ -26,10 +64,17 @@ internal class Program
         });
 
         builder.Services
-            .AddScoped<IUserHandler, UserHandler>();
+            .AddScoped<IUserHandler, UserHandler>()
+            .AddScoped<IEmailTemplatehandler, EmailTemplatehandler>()
+            .AddScoped<ISMSTemplateHandler, SMSTemplateHandler>()
+            .AddScoped<INavigationHandler, NavigationHandler>();
         builder.Services.AddDbContext<DemoContext>();
 
-
+        //builder.Services.AddAuthentication(option =>
+        //{
+        //    option.DefaultAuthenticateScheme = "Custom Scheme";
+        //    option.DefaultChallengeScheme = "Custom Scheme";
+        //}).AddScheme<CustomAuthenticationOptions, CustomAuthenticationHandler>("Custom Scheme", "Custom Auth", options => { });
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -41,6 +86,8 @@ internal class Program
         app.UseCors(MyAllowSpecificOrigins);
         app.UseHttpsRedirection();
 
+        app.UseStaticFiles();
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

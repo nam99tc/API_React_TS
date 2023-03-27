@@ -38,7 +38,10 @@ namespace testAPI.MKT
         [MaxLength(255)]
         public string? Email { get; set; }
         public DateTime CheckTicketDate { get; set; }
-        public int StatusTicket { get; set; }
+        public string QRCodeLink { get; set; } = null!;
+        public string SchoolName { get; set; } = null!;
+        public int TypeCustomer { get; set; }
+        public Guid IdEvent { get; set; }
     }
     public class SysUser
     {
@@ -65,6 +68,10 @@ namespace testAPI.MKT
         public int TicketsNumber { get; set; } = 0;
         public int TicketNumberChecked { get; set; } = 0;
         public int EventType { get; set; }
+        public string RegisterLink { get; set; } = null!;
+        public string RatingLink { get; set; } = null!;
+        public Guid IdCustomer { get; set; }
+        public Guid IdTemplateEmail { get; set; }
     }
     public interface IEventHandler
     {

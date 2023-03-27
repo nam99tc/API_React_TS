@@ -3,42 +3,37 @@ using testAPI.Datatables;
 using testAPI.Extention;
 using testAPI.Repositories;
 
-namespace testAPI.User
+namespace testAPI.Business.EmailTemplate
 {
-    public class UserHandler : IUserHandler
+    public class EmailTemplatehandler : IEmailTemplatehandler
     {
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public UserHandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public EmailTemplatehandler(IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
         }
-
-        public ResponseData Create(UserModel model)
+        public ResponseData Create(EmailTemplateModel model)
         {
             try
             {
-                using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var user = unitOfWork.Repository<SysDemoUser>().FirstOrDefault(x => x.Username == model.Username);
-                if (user != null)
+                using UnitOfWork unitOfWork = new UnitOfWork(_httpContextAccessor);
+                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(x => x.EmailTemplateName == model.EmailTemplateName);
+                if (emailTemplate != null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Entity_Already);
                 }
-                model.DateOfBirth = Convert.ToDateTime(model.DateOfBirth.ToShortDateString());
-
-                var userNew = _mapper.Map<SysDemoUser>(model);
-                userNew.Id = Guid.NewGuid();
-                userNew.CreatedByUserId = userNew.Id;
-                unitOfWork.Repository<SysDemoUser>().Insert(userNew);
+                var newEmailTemplate = _mapper.Map<SysEmailTemplate>(model);
+                newEmailTemplate.Id = Guid.NewGuid();
+                unitOfWork.Repository<SysEmailTemplate>().Insert(newEmailTemplate);
                 unitOfWork.Save();
 
                 return new ResponseData(Code.Success, Constant.Success);
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                return new ResponseDataError(Code.ServerError, exception.Message);
+                return new ResponseDataError(Code.BadRequest, ex.Message);
             }
         }
 
@@ -47,12 +42,12 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var user = unitOfWork.Repository<SysDemoUser>().FirstOrDefault(x => x.Id == id);
-                if(user == null)
+                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(x => x.Id == id);
+                if (emailTemplate == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                unitOfWork.Repository<SysDemoUser>().Delete(user);
+                unitOfWork.Repository<SysEmailTemplate>().Delete(emailTemplate);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }
@@ -67,10 +62,10 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var users = unitOfWork.Repository<SysDemoUser>().Get(x => ids.Contains(x.Id.ToString()));
-                foreach (var item in users)
+                var emailTemplates = unitOfWork.Repository<SysEmailTemplate>().Get(x => ids.Contains(x.Id.ToString()));
+                foreach (var item in emailTemplates)
                 {
-                    unitOfWork.Repository<SysDemoUser>().Delete(item);
+                    unitOfWork.Repository<SysEmailTemplate>().Delete(item);
                 }
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
@@ -86,14 +81,14 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var userData = unitOfWork.Repository<SysDemoUser>().Get();
-                var result = new List<UserModel>();
-                foreach (var item in userData)
+                var emailTemplate = unitOfWork.Repository<SysEmailTemplate>().Get();
+                var result = new List<EmailTemplateModel>();
+                foreach (var item in emailTemplate)
                 {
-                    var tempUser = _mapper.Map<UserModel>(item);
-                    result.Add(tempUser);
+                    var tempEmail = _mapper.Map<EmailTemplateModel>(item);
+                    result.Add(tempEmail);
                 }
-                return new ResponseDataObject<List<UserModel>>(result, Code.Success, Constant.Success);
+                return new ResponseDataObject<List<EmailTemplateModel>>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -106,13 +101,13 @@ namespace testAPI.User
             try
             {
                 using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var existData = unitOfWork.Repository<SysDemoUser>().GetById(id);
+                var existData = unitOfWork.Repository<SysEmailTemplate>().GetById(id);
                 if (existData == null)
                 {
                     return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
                 }
-                var result = _mapper.Map<UserModel>(existData);
-                return new ResponseDataObject<UserModel>(result, Code.Success, Constant.Success);
+                var result = _mapper.Map<EmailTemplateModel>(existData);
+                return new ResponseDataObject<EmailTemplateModel>(result, Code.Success, Constant.Success);
             }
             catch (Exception exception)
             {
@@ -120,28 +115,25 @@ namespace testAPI.User
             }
         }
 
-        public ResponseData Update(Guid id, UserModel model)
+        public ResponseData Update(Guid id, EmailTemplateModel model)
         {
             try
             {
-                using UnitOfWork unitOfWork = new(_httpContextAccessor);
-                var existUser = unitOfWork.Repository<SysDemoUser>().GetById(id);
-                if (existUser == null)
+                if (id != model.Id)
                 {
-                    return new ResponseDataError(Code.BadRequest, Constant.Not_Found);
+                    return new ResponseDataError(Code.BadRequest, Constant.IdNotMatch);
                 }
-                //existUser.LastModifiedOnDate = DateTime.Now;
-                //existUser.Username = model.Username.Trim();
-                //existUser.Fullname = model.Fullname.Trim();
-                //existUser.Phone = model.Phone.Trim();
-                //existUser.Address = model.Address.Trim();
-                //existUser.DateOfBirth = model.DateOfBirth;
-                //existUser.Email = model.Email.Trim();
-                //existUser.LastModifiedByUserId = model.Id;
+                using var unitOfWork = new UnitOfWork(_httpContextAccessor);
+                var entity = unitOfWork.Repository<SysEmailTemplate>().FirstOrDefault(p => p.Id == id && p.EmailTemplateName == model.EmailTemplateName);
+                if (entity == null)
+                {
+                    return new ResponseDataError(Code.NotFound, Constant.Not_Found);
+                }
 
-                _mapper.Map(model, existUser);
-                unitOfWork.Repository<SysDemoUser>().Update(existUser);
+                _mapper.Map(model, entity);
 
+                entity.LastModifiedOnDate = DateTime.Now;
+                unitOfWork.Repository<SysEmailTemplate>().Update(entity);
                 unitOfWork.Save();
                 return new ResponseData(Code.Success, Constant.Success);
             }
